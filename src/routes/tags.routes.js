@@ -1,14 +1,17 @@
 const { Router } = require('express');
+const ensureAuthenticated = require("../middleware/ensureAuthenticated");
 
 const TagsController = require('../controllers/TagsController');
 
 const tagsRouter = Router();
 const tagsController = new TagsController();
 
+tagsRouter.use(ensureAuthenticated);
+
 tagsRouter.get('/', tagsController.findAll);
 tagsRouter.get('/:id', tagsController.findOne);
-tagsRouter.post('/:user_id/:movie_id', tagsController.create);
-tagsRouter.put('/:user_id/:id', tagsController.update);
-tagsRouter.delete('/:user_id/:id', tagsController.delete);
+tagsRouter.post('/:movie_id', tagsController.create);
+tagsRouter.put('/:id', tagsController.update);
+tagsRouter.delete('/:id', tagsController.delete);
 
 module.exports = tagsRouter;

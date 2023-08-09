@@ -14,7 +14,7 @@ class UsersController {
         const user = await knex('users').where({ email }).first();
 
         if (user) {
-            AppError('There is already an user using this email!');
+            throw new AppError('There is already an user using this email!');
         }
         
         const encryptedPassword = await hash(password, 8);
@@ -23,7 +23,7 @@ class UsersController {
             name,
             email,
             password: encryptedPassword,
-            avatar
+            avatar,
         });
 
         response.status(201).json({
@@ -64,49 +64,49 @@ class UsersController {
             newPassword,
             avatar
         } = request.body;
-        const { id } = request.params;
+        const { id } = request.user;
 
+        
         const user = await knex('users').where({ id }).first();
 
         if (!user) {
             throw new AppError('User not found!', 404);
         }
-
+        
         if (newPassword && !oldPassword) {
             throw new AppError('Current password not informed!');
         }
-
+        
         if (newPassword && oldPassword) {
             const checkOldPassword = await compare(oldPassword, user.password);
-    
+            
             if (!checkOldPassword) {
                 throw new AppError('Current password is wrong!');
             }
-
+            
             var encryptedNewPassword = await hash(newPassword, 8);
         }
-
-        await knex('users').where({ id }).update({
+        
+        const updateUser = {
             name: name || user.name,
             email: email || user.email,
             password: encryptedNewPassword || user.password,
             avatar: avatar || user.avatar,
             updated_at: knex.fn.now()
-        });
+        }
+
+        await knex('users').where({ id }).update(updateUser);
 
         response.json({
-            message: 'User updated successfully!'
+            message: 'User updated successfully!',
+            user: {
+                name: updateUser.name,
+                email: updateUser.email,
+                avatar: updateUser.avatar,
+            },
         });
-
     }
     
-    async delete (request, response) {
-        const { id } = request.params;
-        await knex('users').where({ id }).del();
-        response.json({
-            message: 'User deleted successfully!'
-        })
-    }
 }
 
 module.exports = UsersController;

@@ -6,9 +6,11 @@ class MoviesController {
        const {
         title,
         description,
-        rating
+        rating,
+        tags,
        } = request.body;
-       const { user_id } = request.params;
+
+       const { id: user_id } = request.user;
 
        const user = await knex('users').where({
         id: user_id
@@ -27,12 +29,20 @@ class MoviesController {
         throw new AppError('Rating must be between 0 and 5.');
        }
 
-       await knex('movies').insert({
+       const [movie_id] = await knex('movies').insert({
         title,
         description,
         rating,
         user_id
        });
+
+       const tagsToInsert = tags.map(tag => ({
+        name: tag,
+        user_id,
+        movie_id,
+       }));
+
+       await knex('tags').insert(tagsToInsert)
 
        response.status(201).json({
         message: 'Movie created successfully!'
@@ -71,7 +81,20 @@ class MoviesController {
        if (!movie) {
         throw new AppError('Theres no movie with this ID!', 404);
        }
-       response.json(movie);
+
+       const user = await knex('users').where({ id: movie.user_id }).first();
+       if (!user) {
+        throw new AppError('Usuário criador do filme não encontrado!');
+       }
+
+       const tags = await knex('tags').where({ movie_id: movie.id });
+
+       response.json({
+        ...movie,
+        creator: user.name,
+        avatar: user.avatar,
+        tags,
+       });
     }
 
     async update (request, response) {
@@ -80,10 +103,8 @@ class MoviesController {
             description,
             rating
         } = request.body;
-        const {
-            id,
-            user_id
-        } = request.params;
+        const { id } = request.params;
+        const { id: user_id } = request.user;
 
         const movie = await knex('movies').where({ id }).first();
         if (!movie) {

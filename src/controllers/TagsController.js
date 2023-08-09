@@ -3,7 +3,8 @@ const knex = require('../database/knex');
 
 class TagsController {
     async create (request, response) {
-       const { user_id, movie_id } = request.params;
+       const { movie_id } = request.params;
+       const { id: user_id } = request.user;
        const { name } = request.body;
 
        const tag = await knex('tags').where({ name }).first();
@@ -49,8 +50,9 @@ class TagsController {
     }
 
     async update (request, response) {
-        const { id, user_id } = request.params;
+        const { id } = request.params;
         const { name } = request.body;
+        const { id: user_id } = request.user;
 
         const tag = await knex('tags').where({ id }).first();
         if (tag.user_id != user_id) {
@@ -67,7 +69,8 @@ class TagsController {
     }
     
     async delete (request, response) {
-        const { id, user_id } = request.params;
+        const { id } = request.params;
+        const { id: user_id } = request.user;
 
         const tag = await knex('tags').where({ id }).first();
         if (tag.user_id != user_id) {
