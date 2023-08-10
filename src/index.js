@@ -1,3 +1,4 @@
+require('dotenv/config');
 require('express-async-errors');
 const express = require('express');
 const routes = require('./routes');
@@ -6,7 +7,7 @@ const errorHandling = require('./utils/error-handling');
 const uploadConfigs = require("./configs/upload");
 const cors = require('cors');
 
-const PORT = 5555;
+
 const app = express();
 
 app.use(express.json());
@@ -18,6 +19,6 @@ app.use("/files", express.static(uploadConfigs.UPLOADS_FOLDER))
 database();
 
 app.listen(
-    PORT,
-    () => console.log(`Server is running on PORT ${PORT}`)
+    process.env.PORT || 5000,
+    () => console.log(`Server is running on PORT ${process.env.PORT}`)
 );
